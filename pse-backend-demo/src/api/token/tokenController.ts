@@ -16,11 +16,25 @@ class TokenController {
     axiosInstance.interceptors.request.use(AxiosLogger.requestLogger, AxiosLogger.errorLogger);
     axiosInstance.interceptors.response.use(filteredResponseLogger, AxiosLogger.errorLogger);
 
-    // Decode the base64 encoded certificate and key from environment variables
-    const cert = Buffer.from(env.CLIENT_CERT, "base64").toString("ascii");
-    const key = Buffer.from(env.CLIENT_KEY, "base64").toString("ascii");
-
     try {
+      // In development mode without certificates, use a mock token
+      if (env.isDevelopment && (!env.CLIENT_CERT || !env.CLIENT_KEY)) {
+        console.warn("⚠️  Using mock ephemeral token in development mode (no mTLS)");
+        const mockToken = {
+          data: {
+            token: "mock_ephemeral_token_" + Date.now() + "_" + Math.random().toString(36).substring(7),
+            expiresAt: new Date(Date.now() + 3600000), // 1 hour expiry
+          },
+        };
+        serviceResponse = ServiceResponse.success("Success (mock)", mockToken);
+        res.status(serviceResponse.statusCode).send(serviceResponse);
+        return;
+      }
+
+      // Production mode: use real mTLS certificates
+      const cert = Buffer.from(env.CLIENT_CERT, "base64").toString("ascii");
+      const key = Buffer.from(env.CLIENT_KEY, "base64").toString("ascii");
+
       // Create an HTTPS agent with the certificates
       const httpsAgent = new https.Agent({
         cert,

@@ -1,23 +1,31 @@
-import { getApiV1KycIntegration, type KycStatus } from "@/client";
+import { type KycStatus } from "@/client";
 import { StandardAlert } from "@/components/ui/standard-alert";
 import { useUser } from "@/context/UserContext";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { extractErrorMessage } from "@/utils/errorHelpers";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const kycStatusesRequiringContact: KycStatus[] = ["rejected", "requiresAction"];
 
 export const KycRoute = () => {
   const { user, refreshUser, isUserSignedUp } = useUser();
   const [error, setError] = useState("");
-  const [kycUrl, setKycUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    country: "",
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!user?.kycStatus) return;
 
-    // an issue happened during the KYC process, sumsub rejected the application
-    // or an action is required, they need to contact your support
+    // an issue happened during the KYC process
     if (kycStatusesRequiringContact.includes(user.kycStatus)) {
       setError(
         "Your KYC application has encountered an issue. Please contact support using the chat widget in the bottom right corner of the screen.",
@@ -31,78 +39,146 @@ export const KycRoute = () => {
     }
 
     // the user is all set up, they can go to the safe deployment page
-    if (user.kycStatus === "approved") {
+    const mockKycApproved = import.meta.env.DEV && localStorage.getItem("gp-ui.mock-kyc-approved") === "true";
+    if (user.kycStatus === "approved" || mockKycApproved) {
       navigate("/safe-deployment");
     }
   }, [navigate, user, isUserSignedUp]);
 
-  useEffect(() => {
-    if (!user?.kycStatus) return;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-    // regularly check the kyc status as sumsub has hooks integration
-    // with gnosispay api
-    const refreshStatuses: KycStatus[] = ["documentsRequested", "pending", "processing"];
-    if (refreshStatuses.includes(user.kycStatus)) {
-      const timeout = setTimeout(() => {
-        refreshUser();
-      }, 5000);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-      return () => clearTimeout(timeout);
+    // Validate form
+    if (!formData.firstName || !formData.lastName || !formData.dateOfBirth || !formData.country) {
+      setError("Please fill in all fields");
+      return;
     }
-  }, [refreshUser, user]);
 
-  useEffect(() => {
-    getApiV1KycIntegration()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Error fetching KYC integration:", error);
-          const errorMessage = extractErrorMessage(error, "Unknown error");
-          setError(`Error fetching KYC integration: ${errorMessage}`);
-          return;
-        }
+    setIsLoading(true);
+    setError("");
 
-        setKycUrl(data.url);
-      })
-      .catch((err) => {
-        console.error("Error fetching KYC integration url:", err);
-        setError("Error fetching KYC integration url");
-      });
-  }, []);
+    try {
+      // Simulate KYC verification by waiting
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-  // users will see the sumsub iframe in case their kyc status
-  // is one of the following:
-  // - notStarted
-  // - documentsRequested
-  // - pending
-  // - processing
-  // - resubmissionRequested
-  // - requiresAction
+      // In development mode, approve KYC locally
+      if (import.meta.env.DEV) {
+        localStorage.setItem("gp-ui.mock-kyc-approved", "true");
+        toast.success("KYC information submitted successfully!");
+        // Small delay before refreshing to ensure state updates
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        refreshUser();
+      } else {
+        toast.success("KYC information submitted successfully!");
+        refreshUser();
+      }
+    } catch (err) {
+      setError("Error submitting KYC information");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-6 gap-4 h-full" data-testid="kyc-page">
-      {error && (
-        <div className="col-span-6 lg:col-start-2 lg:col-span-4 mx-4 lg:mx-0">
-          <StandardAlert
-            variant="destructive"
-            title="Error"
-            description={error}
-            className="mt-4"
-            data-testid="kyc-error-alert"
-          />
-        </div>
-      )}
-      {!error && (
-        <div className="col-span-6">
-          {kycUrl && (
-            <iframe
-              src={kycUrl}
-              className="w-full h-[calc(100vh-73px)]"
-              title="KYC Integration"
-              data-testid="kyc-iframe"
+      <div className="col-span-6 lg:col-start-2 lg:col-span-4 mx-4 lg:mx-0 mt-8">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-semibold mb-2">Let's get you verified</h1>
+            <p className="text-muted-foreground">Follow the simple steps below</p>
+          </div>
+
+          {error && (
+            <StandardAlert
+              variant="destructive"
+              title="Error"
+              description={error}
+              data-testid="kyc-error-alert"
             />
           )}
+
+          <div className="bg-card p-6 rounded-lg space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold mb-4">Step 1: Provide personal information</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={handleInputChange}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    name="country"
+                    type="text"
+                    placeholder="United States"
+                    value={formData.country}
+                    onChange={handleInputChange}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  loading={isLoading}
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  Submit KYC Information
+                </Button>
+              </form>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

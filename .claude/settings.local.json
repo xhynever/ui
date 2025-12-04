@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(pnpm dev)",
-      "Bash(curl -s http://localhost:8080/health-check)"
+      "Bash(curl -s http://localhost:8080/health-check)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

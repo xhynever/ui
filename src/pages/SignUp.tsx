@@ -101,8 +101,12 @@ export const SignUpRoute = () => {
       setError("");
 
       try {
+        const signupBody: { authEmail: string; partnerId?: string } = { authEmail: email };
+        if (PARTNER_ID) {
+          signupBody.partnerId = PARTNER_ID;
+        }
         const { error, data } = await postApiV1AuthSignup({
-          body: { authEmail: email, partnerId: PARTNER_ID },
+          body: signupBody,
         });
 
         if (error || !data) {

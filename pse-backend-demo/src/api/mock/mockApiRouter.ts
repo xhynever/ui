@@ -70,6 +70,8 @@ mockApiRouter.post("/api/v1/auth/signup", (req, res) => {
   users[mockUserId] = {
     userId: mockUserId,
     email: authEmail,
+    firstName: "Demo",
+    lastName: "User",
     kycStatus: "notStarted",
     isSourceOfFundsAnswered: false,
     isPhoneValidated: false,
@@ -218,6 +220,27 @@ mockApiRouter.post("/dev/set-kyc-status", (req, res) => {
   res.json({ success: true, user: users[userId] });
 });
 
+// Mock POST /api/v1/kyc/submit (KYC information submission)
+mockApiRouter.post("/api/v1/kyc/submit", (req, res) => {
+  const decoded = getJwtFromHeader(req.headers.authorization);
+  if (!decoded?.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { firstName, lastName, dateOfBirth, country } = req.body;
+  const userId = decoded.userId;
+
+  if (users[userId]) {
+    users[userId].firstName = firstName || users[userId].firstName;
+    users[userId].lastName = lastName || users[userId].lastName;
+    users[userId].dateOfBirth = dateOfBirth;
+    users[userId].country = country;
+    users[userId].kycStatus = "approved";
+  }
+
+  res.json({ success: true, user: users[userId] });
+});
+
 // Mock POST /dev/reset-user (development helper to reset user state)
 mockApiRouter.post("/dev/reset-user", (req, res) => {
   const { userId } = req.body;
@@ -249,17 +272,42 @@ mockApiRouter.get("/api/v1/source-of-funds", (_req, res) => {
 });
 
 // Mock POST /api/v1/source-of-funds (submit answers)
-mockApiRouter.post("/api/v1/source-of-funds", (_req, res) => {
+mockApiRouter.post("/api/v1/source-of-funds", (req, res) => {
+  const decoded = getJwtFromHeader(req.headers.authorization);
+  if (!decoded?.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const userId = decoded.userId;
+  if (users[userId]) {
+    users[userId].isSourceOfFundsAnswered = true;
+  }
+
   res.json({ success: true });
 });
 
 // Mock POST /api/v1/verification (send phone code)
-mockApiRouter.post("/api/v1/verification", (_req, res) => {
-  res.json({ ok: true });
+mockApiRouter.post("/api/v1/verification", (req, res) => {
+  const decoded = getJwtFromHeader(req.headers.authorization);
+  if (!decoded?.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  res.json({ ok: true, requestId: "req_" + Date.now() });
 });
 
 // Mock POST /api/v1/verification/check (verify OTP)
-mockApiRouter.post("/api/v1/verification/check", (_req, res) => {
+mockApiRouter.post("/api/v1/verification/check", (req, res) => {
+  const decoded = getJwtFromHeader(req.headers.authorization);
+  if (!decoded?.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const userId = decoded.userId;
+  if (users[userId]) {
+    users[userId].isPhoneValidated = true;
+  }
+
   res.json({ success: true });
 });
 
@@ -270,7 +318,19 @@ mockApiRouter.get("/api/v1/safe-config", (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  res.json({ accountStatus: 0 });
+  // Return a complete safe config object
+  const mockSafeConfig = {
+    address: "0x1234567890123456789012345678901234567890",
+    chainId: 100,
+    accountStatus: 0, // AccountIntegrityStatus.Ok
+    fiatSymbol: "EUR",
+    accountNonce: 0,
+    delayModuleAddress: "0x0987654321098765432109876543210987654321",
+    ibanAddress: "DE89370400440532013000",
+    ibanCountry: "DE",
+  };
+
+  res.json(mockSafeConfig);
 });
 
 // Mock POST /api/v1/safe/deploy
@@ -317,6 +377,8 @@ mockApiRouter.post("/api/v1/auth/challenge", (req, res) => {
   users[mockUserId] = {
     userId: mockUserId,
     email: "user@example.com",
+    firstName: "Demo",
+    lastName: "User",
     kycStatus: "notStarted",
     isSourceOfFundsAnswered: false,
     isPhoneValidated: false,

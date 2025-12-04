@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle2, LoaderCircle } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useAuth } from "@/context/AuthContext";
+import { useDevMode } from "@/context/DevModeContext";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 
@@ -26,7 +27,8 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showMockButton, setShowMockButton] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { refreshUser } = useUser();
+  const { refreshUser, refreshSafeConfig } = useUser();
+  const { setBypassNavigation } = useDevMode();
 
   const stopPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
@@ -175,7 +177,26 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
             <p className="text-center text-muted-foreground" data-testid="safe-deployment-success-message">
               Your Safe account has been successfully created!
             </p>
-            <Button className="mt-4" onClick={() => navigate("/")} data-testid="safe-deployment-visit-home-button">
+            <Button
+              className="mt-4"
+              onClick={() => {
+                console.log("Visit Home clicked, refreshing data and disabling nav guards...");
+                // Enable bypass navigation to prevent auth guards from redirecting
+                setBypassNavigation(true);
+                refreshUser();
+                refreshSafeConfig();
+                // Wait for data to be fetched, then navigate
+                setTimeout(() => {
+                  console.log("Navigating to home...");
+                  navigate("/");
+                  // Re-enable navigation guards after a brief delay
+                  setTimeout(() => {
+                    setBypassNavigation(false);
+                  }, 1000);
+                }, 1500);
+              }}
+              data-testid="safe-deployment-visit-home-button"
+            >
               Visit Home
             </Button>
           </>

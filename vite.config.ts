@@ -26,11 +26,16 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5174, // 错误分支 +1
+    port: 5174,
     allowedHosts: ["verified-pug-renewing.ngrok-free.app"],
-    cors: {
-      origin: "https://app.safe.global",
-      allowedHeaders: ["Content-Type", "Authorization"],
+    cors: true,
+    proxy: {
+      '/api': {
+        target: 'https://api.gnosispay.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+        secure: false,
+      },
     },
   },
 });

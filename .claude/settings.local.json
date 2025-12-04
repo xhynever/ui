@@ -1,10 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm dev)",
-      "Bash(curl -s http://localhost:8080/health-check)",
-      "Bash(pkill:*)",
-      "Bash(.ts$ \")"
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

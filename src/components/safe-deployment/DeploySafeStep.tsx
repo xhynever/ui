@@ -27,7 +27,7 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showMockButton, setShowMockButton] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { refreshUser, refreshSafeConfig } = useUser();
+  const { refreshUser: refreshUserFn, refreshSafeConfig: refreshSafeConfigFn } = useUser();
   const { setBypassNavigation } = useDevMode();
 
   const stopPolling = useCallback(() => {
@@ -56,7 +56,8 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
           setStep(DeploymentStep.Done);
           setIsProcessing(false);
           stopPolling();
-          refreshUser();
+          refreshUserFn();
+          refreshSafeConfigFn();
           return;
         }
 
@@ -74,7 +75,7 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
         setIsProcessing(false);
         stopPolling();
       });
-  }, [setError, stopPolling, refreshUser]);
+  }, [setError, stopPolling, refreshUserFn, refreshSafeConfigFn]);
 
   const startPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
@@ -124,6 +125,29 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
     };
   }, [stopPolling]);
 
+  // Auto-navigate to home when deployment completes
+  useEffect(() => {
+    if (step === DeploymentStep.Done) {
+      console.log("Deployment Done, auto-navigating to home...");
+      setBypassNavigation(true);
+      // Refresh data to ensure isSafeConfigured is updated
+      refreshUserFn();
+      refreshSafeConfigFn();
+
+      const timer = setTimeout(() => {
+        console.log("Auto-navigating to home...");
+        navigate("/");
+        // Reset bypass navigation after navigation completes
+        const resetTimer = setTimeout(() => {
+          setBypassNavigation(false);
+        }, 500);
+        return () => clearTimeout(resetTimer);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [step, navigate, setBypassNavigation, refreshUserFn, refreshSafeConfigFn]);
+
   // Show mock button after 3 seconds in dev mode
   useEffect(() => {
     if (import.meta.env.DEV && step === DeploymentStep.Deploying && isProcessing) {
@@ -161,11 +185,12 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
       setStep(DeploymentStep.Done);
       setIsProcessing(false);
       stopPolling();
-      refreshUser();
+      refreshUserFn();
+      refreshSafeConfigFn();
     } catch (err) {
       setError(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
-  }, [getJWT, setError, stopPolling, refreshUser]);
+  }, [getJWT, setError, stopPolling, refreshUserFn, refreshSafeConfigFn]);
 
   return (
     <div className="col-span-6 lg:col-start-2 lg:col-span-4 mx-4 lg:mx-0" data-testid="deploy-safe-step">
@@ -183,8 +208,8 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
                 console.log("Visit Home clicked, refreshing data and disabling nav guards...");
                 // Enable bypass navigation to prevent auth guards from redirecting
                 setBypassNavigation(true);
-                refreshUser();
-                refreshSafeConfig();
+                refreshUserFn();
+                refreshSafeConfigFn();
                 // Wait for data to be fetched, then navigate
                 setTimeout(() => {
                   console.log("Navigating to home...");

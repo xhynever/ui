@@ -14,11 +14,12 @@ import { mockApiRouter } from "./api/mock/mockApiRouter";
 
 const CORS_CONFIG = {
   // Static origins that are always allowed
-  staticOrigins: ["https://verified-pug-renewing.ngrok-free.app", "http://localhost", "https://app.gnosispay.com"],
+  staticOrigins: ["https://verified-pug-renewing.ngrok-free.app", "http://localhost", "https://app.gnosispay.com", "http://192.168.2.208"],
   // Pattern for dynamic subdomain matching
   patterns: [
     /^https:\/\/([a-zA-Z0-9-]+\.)*gp-ui\.pages\.dev$/,
     /^http:\/\/localhost:[0-9-]+$/,
+    /^http:\/\/192\.168\.2\.[0-9]+:[0-9-]+$/,
     /^https:\/\/([a-zA-Z0-9-]+\.)*gnosispay\.com$/,
   ],
 };

@@ -139,11 +139,74 @@ mockApiRouter.post("/dev/kyc-approve", (req, res) => {
 
   if (users[userId]) {
     users[userId].kycStatus = "approved";
+  }
+
+  res.json({ success: true, user: users[userId] });
+});
+
+// Mock POST /dev/source-of-funds-approve (development helper)
+mockApiRouter.post("/dev/source-of-funds-approve", (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
+  if (users[userId]) {
     users[userId].isSourceOfFundsAnswered = true;
+  }
+
+  res.json({ success: true, user: users[userId] });
+});
+
+// Mock POST /dev/phone-verify-approve (development helper)
+mockApiRouter.post("/dev/phone-verify-approve", (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
+  if (users[userId]) {
     users[userId].isPhoneValidated = true;
   }
 
   res.json({ success: true, user: users[userId] });
+});
+
+// Mock POST /dev/safe-deploy-approve (development helper)
+mockApiRouter.post("/dev/safe-deploy-approve", (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
+  if (users[userId]) {
+    users[userId].safeWallet = [{ address: "0x" + Math.random().toString(16).slice(2, 42) }];
+  }
+
+  res.json({ success: true, user: users[userId] });
+});
+
+// Mock GET /api/v1/source-of-funds
+mockApiRouter.get("/api/v1/source-of-funds", (_req, res) => {
+  res.json([
+    { question: "What is your primary source of funds?", answer: "" },
+    { question: "How much do you plan to transfer annually?", answer: "" },
+  ]);
+});
+
+// Mock POST /api/v1/source-of-funds (submit answers)
+mockApiRouter.post("/api/v1/source-of-funds", (_req, res) => {
+  res.json({ success: true });
+});
+
+// Mock POST /api/v1/verification (send phone code)
+mockApiRouter.post("/api/v1/verification", (_req, res) => {
+  res.json({ ok: true });
+});
+
+// Mock POST /api/v1/verification/check (verify OTP)
+mockApiRouter.post("/api/v1/verification/check", (_req, res) => {
+  res.json({ success: true });
 });
 
 // Mock GET /api/v1/safe-config

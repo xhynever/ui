@@ -13,6 +13,7 @@ export type PhoneVerificationStepProps = {
   onComplete: () => void;
   setError: (err: string) => void;
   onCancel?: () => void;
+  onPrev?: () => void;
   title: string;
 };
 
@@ -22,7 +23,7 @@ enum PhoneStep {
   OtpVerification = "otp-verification",
 }
 
-const PhoneVerificationStep = ({ onComplete, setError, onCancel, title }: PhoneVerificationStepProps) => {
+const PhoneVerificationStep = ({ onComplete, setError, onCancel, onPrev, title }: PhoneVerificationStepProps) => {
   const { getJWT } = useAuth();
   const [step, setStep] = useState<PhoneStep>(PhoneStep.TypePhone);
   const [phone, setPhone] = useState("");
@@ -134,14 +135,21 @@ const PhoneVerificationStep = ({ onComplete, setError, onCancel, title }: PhoneV
           </p>
           <form className="space-y-4 mt-4 w-xs" onSubmit={handlePhoneContinue} data-testid="phone-input-form">
             <PhoneInput value={phone} onChange={setPhone} disabled={isSubmitting} data-testid="phone-number-input" />
-            {onCancel && (
-              <Button className="mr-4" type="button" variant="outline" onClick={onCancel}>
-                Cancel
+            <div className="flex gap-2">
+              {onPrev && (
+                <Button type="button" variant="outline" onClick={onPrev} disabled={isSubmitting}>
+                  ← Previous
+                </Button>
+              )}
+              {onCancel && (
+                <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+                  Cancel
+                </Button>
+              )}
+              <Button type="submit" disabled={!phone || isSubmitting} data-testid="phone-continue-button" className="flex-1">
+                Continue
               </Button>
-            )}
-            <Button type="submit" disabled={!phone || isSubmitting} data-testid="phone-continue-button">
-              Continue
-            </Button>
+            </div>
           </form>
         </>
       )}
@@ -179,20 +187,29 @@ const PhoneVerificationStep = ({ onComplete, setError, onCancel, title }: PhoneV
             disabled={isOtpLoading}
             data-testid="otp-input"
           />
-          <Button
-            type="submit"
-            loading={isOtpLoading}
-            disabled={isOtpLoading || otp.length !== 6}
-            data-testid="otp-verify-button"
-          >
-            Verify
-          </Button>
+          <div className="flex gap-2">
+            {onPrev && (
+              <Button type="button" variant="outline" onClick={onPrev} disabled={isOtpLoading}>
+                ← Previous
+              </Button>
+            )}
+            <Button
+              type="submit"
+              loading={isOtpLoading}
+              disabled={isOtpLoading || otp.length !== 6}
+              data-testid="otp-verify-button"
+              className="flex-1"
+            >
+              Verify & Next →
+            </Button>
+          </div>
           <Button
             type="button"
             variant="link"
             onClick={handleResendCode}
             disabled={isSubmitting || isOtpLoading || resendTimer > 0}
             data-testid="otp-resend-button"
+            className="w-full"
           >
             {resendTimer > 0 ? `Resend code (${resendTimer}s)` : "Resend code"}
           </Button>

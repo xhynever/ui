@@ -21,6 +21,7 @@ import { OnchainTransactionsContextProvider } from "./context/OnchainTransaction
 import { IbanTransactionsContextProvider } from "./context/IbanTransactionsContext.tsx";
 import { OrdersContextProvider } from "./context/OrdersContext.tsx";
 import { ZendeskProvider } from "react-use-zendesk";
+import { DevModeProvider } from "./context/DevModeContext.tsx";
 
 export const BASE_URL = import.meta.env.VITE_GNOSIS_PAY_API_BASE_URL || "https://api.gnosispay.com/";
 export const zendeskKey = import.meta.env.VITE_ZENDESK_KEY;
@@ -48,28 +49,30 @@ ReactDOM.createRoot(rootElement).render(
     <ThemeProvider defaultTheme="system" storageKey="gp-ui-theme">
       <WagmiProvider config={wagmiAdapter.wagmiConfig}>
         <QueryClientProvider client={queryClient}>
-          <AuthContextProvider>
-            <UserContextProvider>
-              <IBANContextProvider>
-                <ZendeskProvider apiKey={zendeskKey}>
-                  <CardsContextProvider>
-                    <OrdersContextProvider>
-                      <CardTransactionsContextProvider>
-                        <OnchainTransactionsContextProvider>
-                          <IbanTransactionsContextProvider>
-                            <DelayRelayContextProvider>
-                              <App />
-                              <Toaster offset={{ right: "6rem", bottom: "1rem" }} expand />
-                            </DelayRelayContextProvider>
-                          </IbanTransactionsContextProvider>
-                        </OnchainTransactionsContextProvider>
-                      </CardTransactionsContextProvider>
-                    </OrdersContextProvider>
-                  </CardsContextProvider>
-                </ZendeskProvider>
-              </IBANContextProvider>
-            </UserContextProvider>
-          </AuthContextProvider>
+          <DevModeProvider>
+            <AuthContextProvider>
+              <UserContextProvider>
+                <IBANContextProvider>
+                  <ZendeskProvider apiKey={zendeskKey}>
+                    <CardsContextProvider>
+                      <OrdersContextProvider>
+                        <CardTransactionsContextProvider>
+                          <OnchainTransactionsContextProvider>
+                            <IbanTransactionsContextProvider>
+                              <DelayRelayContextProvider>
+                                <App />
+                                <Toaster offset={{ right: "6rem", bottom: "1rem" }} expand />
+                              </DelayRelayContextProvider>
+                            </IbanTransactionsContextProvider>
+                          </OnchainTransactionsContextProvider>
+                        </CardTransactionsContextProvider>
+                      </OrdersContextProvider>
+                    </CardsContextProvider>
+                  </ZendeskProvider>
+                </IBANContextProvider>
+              </UserContextProvider>
+            </AuthContextProvider>
+          </DevModeProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </ThemeProvider>

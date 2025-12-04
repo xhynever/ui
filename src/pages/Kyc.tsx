@@ -2,6 +2,7 @@ import { type KycStatus } from "@/client";
 import { StandardAlert } from "@/components/ui/standard-alert";
 import { useUser } from "@/context/UserContext";
 import { useAuth } from "@/context/AuthContext";
+import { useDevMode } from "@/context/DevModeContext";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,11 @@ const kycStatusesRequiringContact: KycStatus[] = ["rejected", "requiresAction"];
 export const KycRoute = () => {
   const { user, refreshUser, isUserSignedUp } = useUser();
   const { getJWT } = useAuth();
+  const { bypassNavigation } = useDevMode();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [autoApproveTimer, setAutoApproveTimer] = useState<NodeJS.Timeout | null>(null);
+  const [secondsRemaining, setSecondsRemaining] = useState(5);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -26,6 +30,9 @@ export const KycRoute = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // In dev mode with bypass, skip all navigation checks
+    if (import.meta.env.DEV && bypassNavigation) return;
+
     if (!user?.kycStatus) return;
 
     // an issue happened during the KYC process
@@ -45,7 +52,32 @@ export const KycRoute = () => {
     if (user.kycStatus === "approved") {
       navigate("/safe-deployment");
     }
-  }, [navigate, user, isUserSignedUp]);
+  }, [navigate, user, isUserSignedUp, bypassNavigation]);
+
+  // Auto-approve KYC after 5 seconds when status is "pending" or "processing"
+  useEffect(() => {
+    if (user?.kycStatus === "pending" || user?.kycStatus === "processing") {
+      setSecondsRemaining(5);
+
+      const countdownInterval = setInterval(() => {
+        setSecondsRemaining((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            // Auto-approve after countdown
+            handleAutoApproveKyc();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      setAutoApproveTimer(countdownInterval as any);
+
+      return () => {
+        clearInterval(countdownInterval);
+      };
+    }
+  }, [user?.kycStatus]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -55,9 +87,8 @@ export const KycRoute = () => {
     }));
   };
 
-  const approveKycOnBackend = async () => {
+  const handleAutoApproveKyc = async () => {
     try {
-      // Get JWT and extract userId
       const jwt = await getJWT();
       if (!jwt) {
         setError("Failed to get authentication token");
@@ -72,22 +103,60 @@ export const KycRoute = () => {
         return;
       }
 
-      // Call backend to approve KYC
-      const response = await fetch(`${import.meta.env.VITE_GNOSIS_PAY_API_BASE_URL}dev/kyc-approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${import.meta.env.VITE_GNOSIS_PAY_API_BASE_URL}dev/set-kyc-status`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, status: "approved" }),
         },
-        body: JSON.stringify({ userId }),
-      });
+      );
 
       if (!response.ok) {
         throw new Error("Failed to approve KYC");
       }
 
+      refreshUser();
+    } catch (err) {
+      setError(`Error auto-approving KYC: ${err instanceof Error ? err.message : "Unknown error"}`);
+      console.error(err);
+    }
+  };
+
+  const setKycToPending = async () => {
+    try {
+      const jwt = await getJWT();
+      if (!jwt) {
+        setError("Failed to get authentication token");
+        return false;
+      }
+
+      const decoded = jwtDecode(jwt) as any;
+      const userId = decoded.userId;
+
+      if (!userId) {
+        setError("User not properly authenticated");
+        return false;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_GNOSIS_PAY_API_BASE_URL}dev/set-kyc-status`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, status: "pending" }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to set KYC status");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      refreshUser();
       return true;
     } catch (err) {
-      setError(`Error approving KYC: ${err instanceof Error ? err.message : "Unknown error"}`);
+      setError(`Error setting KYC to pending: ${err instanceof Error ? err.message : "Unknown error"}`);
       console.error(err);
       return false;
     }
@@ -106,12 +175,9 @@ export const KycRoute = () => {
     setError("");
 
     try {
-      const success = await approveKycOnBackend();
+      const success = await setKycToPending();
       if (success) {
-        toast.success("KYC information submitted successfully!");
-        // Small delay before refreshing
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        refreshUser();
+        toast.success("KYC information submitted! Processing...");
       }
     } finally {
       setIsLoading(false);
@@ -123,17 +189,99 @@ export const KycRoute = () => {
     setError("");
 
     try {
-      const success = await approveKycOnBackend();
+      const success = await setKycToPending();
       if (success) {
-        toast.success("KYC approved (dev mode)!");
-        // Small delay before refreshing
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        refreshUser();
+        toast.success("KYC submitted! Processing...");
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSetKycStatus = async (status: string) => {
+    setError("");
+    setIsLoading(true);
+    try {
+      const jwt = await getJWT();
+      if (!jwt) {
+        setError("Failed to get authentication token");
+        return;
+      }
+
+      const decoded = jwtDecode(jwt) as any;
+      const userId = decoded.userId;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_GNOSIS_PAY_API_BASE_URL}dev/set-kyc-status`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, status }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to set KYC status");
+      }
+
+      toast.success(`KYC status set to: ${status}`);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      refreshUser();
+    } catch (err) {
+      setError(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const KYC_STATUSES: Array<{ value: string; label: string; description: string }> = [
+    { value: "notStarted", label: "Not Started", description: "User hasn't started KYC" },
+    {
+      value: "documentsRequested",
+      label: "Documents Requested",
+      description: "Waiting for user to upload documents",
+    },
+    { value: "pending", label: "Pending", description: "Awaiting verification" },
+    { value: "processing", label: "Processing", description: "Being processed by Sumsub" },
+    { value: "approved", label: "Approved ✓", description: "KYC approved, ready for next step" },
+    {
+      value: "resubmissionRequested",
+      label: "Resubmission Requested",
+      description: "Some checks failed, resubmit needed",
+    },
+    { value: "rejected", label: "Rejected", description: "Final rejection (contact support)" },
+    { value: "requiresAction", label: "Requires Action", description: "Manual check required" },
+  ];
+
+  // Show waiting page when KYC is pending or processing
+  if (user?.kycStatus === "pending" || user?.kycStatus === "processing") {
+    return (
+      <div className="grid grid-cols-6 gap-4 h-full" data-testid="kyc-page">
+        <div className="col-span-6 lg:col-start-2 lg:col-span-4 mx-4 lg:mx-0 mt-8 flex items-center justify-center">
+          <div className="space-y-8 text-center">
+            <div>
+              <h1 className="text-3xl font-semibold mb-2">Your KYC is being processed</h1>
+              <p className="text-muted-foreground text-lg">Please wait while we verify your information</p>
+            </div>
+
+            <div className="flex justify-center">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-4 border-muted-foreground/20"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary animate-spin"></div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Auto-approving in...</p>
+              <p className="text-4xl font-bold text-primary">{secondsRemaining}s</p>
+            </div>
+
+            <p className="text-xs text-muted-foreground">This usually takes a few seconds</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-6 gap-4 h-full" data-testid="kyc-page">
@@ -142,6 +290,9 @@ export const KycRoute = () => {
           <div>
             <h1 className="text-2xl font-semibold mb-2">Let's get you verified</h1>
             <p className="text-muted-foreground">Follow the simple steps below</p>
+            {user?.kycStatus && (
+              <p className="text-sm text-muted-foreground mt-2">Current status: <strong>{user.kycStatus}</strong></p>
+            )}
           </div>
 
           {error && (
@@ -222,27 +373,46 @@ export const KycRoute = () => {
                   Submit KYC Information
                 </Button>
               </form>
-
-              {import.meta.env.DEV && (
-                <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-xs text-yellow-800 dark:text-yellow-200 mb-3 font-semibold">
-                    🧪 Development Mode
-                  </p>
-                  <Button
-                    onClick={handleMockKycApproval}
-                    loading={isLoading}
-                    disabled={isLoading}
-                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
-                  >
-                    Mock KYC Approval (Skip Form)
-                  </Button>
-                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
-                    Click to directly approve KYC without filling the form above
-                  </p>
-                </div>
-              )}
             </div>
           </div>
+
+          {import.meta.env.DEV && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 space-y-3">
+              <p className="text-xs text-yellow-800 dark:text-yellow-200 font-semibold">
+                🧪 Development Mode - Quick KYC Status Control
+              </p>
+
+              <div className="space-y-2">
+                <Button
+                  onClick={handleMockKycApproval}
+                  loading={isLoading}
+                  disabled={isLoading}
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+                >
+                  Approve KYC (Skip Form)
+                </Button>
+              </div>
+
+              <div className="border-t border-yellow-200 dark:border-yellow-800 pt-3">
+                <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2 font-semibold">
+                  Set KYC Status:
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {KYC_STATUSES.map((status) => (
+                    <button
+                      key={status.value}
+                      onClick={() => handleSetKycStatus(status.value)}
+                      disabled={isLoading}
+                      className="text-xs px-2 py-1.5 rounded bg-yellow-100 dark:bg-yellow-800 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-200 dark:hover:bg-yellow-700 disabled:opacity-50 transition-colors"
+                      title={status.description}
+                    >
+                      {status.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

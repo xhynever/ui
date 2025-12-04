@@ -1,5 +1,6 @@
 import { StandardAlert } from "@/components/ui/standard-alert";
 import { useUser } from "@/context/UserContext";
+import { useDevMode } from "@/context/DevModeContext";
 import { useEffect, useState } from "react";
 import SourceOfFundsStep from "@/components/safe-deployment/SourceOfFundsStep";
 import PhoneVerificationStep from "@/components/safe-deployment/PhoneVerificationStep";
@@ -14,10 +15,14 @@ enum ScreenStep {
 export const SafeDeploymentRoute = () => {
   const [step, setStep] = useState<ScreenStep>(ScreenStep.AnswerSourceOfFunds);
   const { user, safeConfig, refreshUser: refetchUser, isUserSignedUp } = useUser();
+  const { bypassNavigation } = useDevMode();
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
+    // In dev mode with bypass, skip all navigation checks
+    if (import.meta.env.DEV && bypassNavigation) return;
+
     // If user is not signed up, redirect to register
     if (isUserSignedUp === false) {
       navigate("/register");
@@ -30,7 +35,7 @@ export const SafeDeploymentRoute = () => {
     if (user.kycStatus !== "approved") {
       navigate("/kyc");
     }
-  }, [user, navigate, isUserSignedUp]);
+  }, [user, navigate, isUserSignedUp, bypassNavigation]);
 
   useEffect(() => {
     if (!user || !safeConfig) return;
@@ -63,6 +68,9 @@ export const SafeDeploymentRoute = () => {
             refetchUser();
             setStep(ScreenStep.VerifyPhoneNumber);
           }}
+          onPrev={() => {
+            navigate("/kyc");
+          }}
           setError={setError}
         />
       )}
@@ -71,6 +79,9 @@ export const SafeDeploymentRoute = () => {
           onComplete={() => {
             refetchUser();
             setStep(ScreenStep.DeploySafe);
+          }}
+          onPrev={() => {
+            setStep(ScreenStep.AnswerSourceOfFunds);
           }}
           setError={setError}
           title="Mobile phone verification"

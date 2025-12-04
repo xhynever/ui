@@ -9,10 +9,11 @@ import { toast } from "sonner";
 
 export type SourceOfFundsStepProps = {
   onComplete: () => void;
+  onPrev?: () => void;
   setError: (err: string) => void;
 };
 
-const SourceOfFundsStep = ({ onComplete, setError }: SourceOfFundsStepProps) => {
+const SourceOfFundsStep = ({ onComplete, onPrev, setError }: SourceOfFundsStepProps) => {
   const { getJWT } = useAuth();
   const [sourceOfFunds, setSourceOfFunds] = useState<KycQuestion[]>([]);
   const [answers, setAnswers] = useState<string[]>([]);
@@ -133,14 +134,27 @@ const SourceOfFundsStep = ({ onComplete, setError }: SourceOfFundsStepProps) => 
             </div>
           );
         })}
-        <Button
-          loading={isSubmitting}
-          type="submit"
-          disabled={isSourceOfFundsSubmitDisabled}
-          data-testid="source-of-funds-submit-button"
-        >
-          Submit
-        </Button>
+        <div className="flex gap-2">
+          {onPrev && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onPrev}
+              disabled={isSubmitting}
+            >
+              ← Previous
+            </Button>
+          )}
+          <Button
+            loading={isSubmitting}
+            type="submit"
+            disabled={isSourceOfFundsSubmitDisabled}
+            data-testid="source-of-funds-submit-button"
+            className="flex-1"
+          >
+            Next →
+          </Button>
+        </div>
       </form>
 
       {import.meta.env.DEV && (

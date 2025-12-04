@@ -18,6 +18,7 @@ import { useAppInitialization } from "./hooks/useAppInitialization";
 import { useAppKitTheme } from "./hooks/useAppKitTheme";
 import { PARTNERS_URL } from "./constants";
 import { WithdrawRoute } from "./pages/Withdraw";
+import { DevNav } from "./components/dev/DevNav";
 
 const ExternalRedirect = ({ url }: { url: string }) => {
   useEffect(() => {
@@ -156,6 +157,7 @@ function App() {
         </Route>
       </Routes>
       <FooterNavBar />
+      <DevNav />
     </div>
   );
 }

@@ -6,6 +6,24 @@ const mockApiRouter: Router = express.Router();
 // In-memory user store
 const users: Record<string, any> = {};
 
+// Helper to create a mock JWT token (simple base64 encoding of header.payload.signature)
+const createMockJwt = (userId: string, email: string): string => {
+  const header = { alg: "HS256", typ: "JWT" };
+  const payload = {
+    userId,
+    email,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 86400 * 7, // 7 days
+  };
+  const signature = "mock_signature";
+
+  const encodedHeader = Buffer.from(JSON.stringify(header)).toString("base64url");
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const encodedSignature = Buffer.from(signature).toString("base64url");
+
+  return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
+};
+
 // Helper to extract JWT from header
 const getJwtFromHeader = (authHeader?: string): any => {
   if (!authHeader?.startsWith("Bearer ")) return null;
@@ -47,7 +65,7 @@ mockApiRouter.post("/api/v1/auth/signup", (req, res) => {
 
   // Generate a mock JWT
   const mockUserId = `user_${Date.now()}`;
-  const mockToken = Buffer.from(JSON.stringify({ userId: mockUserId, email: authEmail })).toString("base64");
+  const mockToken = createMockJwt(mockUserId, authEmail);
 
   users[mockUserId] = {
     userId: mockUserId,
@@ -186,6 +204,42 @@ mockApiRouter.post("/dev/safe-deploy-approve", (req, res) => {
   res.json({ success: true, user: users[userId] });
 });
 
+// Mock POST /dev/set-kyc-status (development helper to set specific KYC status)
+mockApiRouter.post("/dev/set-kyc-status", (req, res) => {
+  const { userId, status } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
+  if (users[userId]) {
+    users[userId].kycStatus = status || "notStarted";
+  }
+
+  res.json({ success: true, user: users[userId] });
+});
+
+// Mock POST /dev/reset-user (development helper to reset user state)
+mockApiRouter.post("/dev/reset-user", (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+
+  if (users[userId]) {
+    users[userId] = {
+      userId,
+      email: users[userId].email,
+      kycStatus: "notStarted",
+      isSourceOfFundsAnswered: false,
+      isPhoneValidated: false,
+      status: "ACTIVE",
+      safeWallet: [],
+    };
+  }
+
+  res.json({ success: true, message: "User state reset", user: users[userId] });
+});
+
 // Mock GET /api/v1/source-of-funds
 mockApiRouter.get("/api/v1/source-of-funds", (_req, res) => {
   res.json([
@@ -242,6 +296,35 @@ mockApiRouter.get("/api/v1/safe/deploy", (req, res) => {
   }
 
   res.json({ status: "ok" });
+});
+
+// Mock GET /api/v1/auth/nonce
+mockApiRouter.get("/api/v1/auth/nonce", (_req, res) => {
+  const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  res.json(nonce);
+});
+
+// Mock POST /api/v1/auth/challenge
+mockApiRouter.post("/api/v1/auth/challenge", (req, res) => {
+  const { message, signature } = req.body;
+  if (!message || !signature) {
+    return res.status(400).json({ error: "Message and signature are required" });
+  }
+
+  const mockUserId = `user_${Date.now()}`;
+  const mockToken = createMockJwt(mockUserId, "user@example.com");
+
+  users[mockUserId] = {
+    userId: mockUserId,
+    email: "user@example.com",
+    kycStatus: "notStarted",
+    isSourceOfFundsAnswered: false,
+    isPhoneValidated: false,
+    status: "ACTIVE",
+    safeWallet: [],
+  };
+
+  res.json({ token: mockToken });
 });
 
 export { mockApiRouter };

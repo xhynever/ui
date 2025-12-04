@@ -6,17 +6,57 @@ import { Transactions } from "@/components/transactions/transactions";
 import { PendingCardOrder } from "@/components/pending-card-order";
 import { Rewards } from "@/components/rewards";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, RotateCcw } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { StatusHelpIcon } from "@/components/ui/status-help-icon";
 import { PartnerBanner } from "@/components/ui/partner-banner";
 import { IbanBanner } from "@/components/ui/iban-banner";
 import { UnspendableAmountAlert } from "@/components/unspendable-amount-alert";
+import { useAuth } from "@/context/AuthContext";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
 
 export const Home = () => {
   const [sendFundsModalOpen, setSendFundsModalOpen] = useState(false);
   const [addFundsModalOpen, setAddFundsModalOpen] = useState(false);
+  const { getJWT } = useAuth();
+  const navigate = useNavigate();
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleResetFlow = async () => {
+    if (!import.meta.env.DEV) return;
+
+    setIsResetting(true);
+    try {
+      const jwt = await getJWT();
+      if (!jwt) {
+        toast.error("Failed to get authentication token");
+        return;
+      }
+
+      const decoded = jwtDecode(jwt) as any;
+      const userId = decoded.userId;
+
+      const response = await fetch(`${import.meta.env.VITE_GNOSIS_PAY_API_BASE_URL}dev/reset-user`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to reset user state");
+      }
+
+      toast.success("Flow reset! Redirecting to registration...");
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      navigate("/register");
+    } catch (err) {
+      toast.error(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-6 gap-4 h-full mt-4">
@@ -33,6 +73,19 @@ export const Home = () => {
             <div className="mb-12 mt-4 flex gap-4 mx-4 lg:mx-0">
               <Button onClick={() => setSendFundsModalOpen(true)}>Send funds</Button>
               <Button onClick={() => setAddFundsModalOpen(true)}>Add funds</Button>
+              {import.meta.env.DEV && (
+                <Button
+                  onClick={handleResetFlow}
+                  loading={isResetting}
+                  disabled={isResetting}
+                  variant="outline"
+                  className="ml-auto"
+                  title="Reset flow to start over"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reset Flow
+                </Button>
+              )}
             </div>
           </div>
 

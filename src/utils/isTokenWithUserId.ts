@@ -4,7 +4,11 @@ import { jwtDecode } from "jwt-decode";
 export const isTokenWithUserId = (token: string | null): boolean => {
   if (!token) return false;
 
-  const decodedToken = jwtDecode<{ userId?: string; exp: number }>(token);
-
-  return !!decodedToken.userId;
+  try {
+    const decodedToken = jwtDecode<{ userId?: string; exp: number }>(token);
+    return !!decodedToken.userId;
+  } catch (error) {
+    console.error("Error decoding token in isTokenWithUserId:", error);
+    return false;
+  }
 };

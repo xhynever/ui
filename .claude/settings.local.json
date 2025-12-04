@@ -3,7 +3,8 @@
     "allow": [
       "Bash(pnpm dev)",
       "Bash(curl -s http://localhost:8080/health-check)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(.ts$ \")"
     ],
     "deny": [],
     "ask": []

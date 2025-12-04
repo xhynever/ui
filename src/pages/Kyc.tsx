@@ -19,8 +19,6 @@ export const KycRoute = () => {
   const { bypassNavigation } = useDevMode();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [autoApproveTimer, setAutoApproveTimer] = useState<NodeJS.Timeout | null>(null);
-  const [secondsRemaining, setSecondsRemaining] = useState(5);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -54,30 +52,6 @@ export const KycRoute = () => {
     }
   }, [navigate, user, isUserSignedUp, bypassNavigation]);
 
-  // Auto-approve KYC after 5 seconds when status is "pending" or "processing"
-  useEffect(() => {
-    if (user?.kycStatus === "pending" || user?.kycStatus === "processing") {
-      setSecondsRemaining(5);
-
-      const countdownInterval = setInterval(() => {
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(countdownInterval);
-            // Auto-approve after countdown
-            handleAutoApproveKyc();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      setAutoApproveTimer(countdownInterval as any);
-
-      return () => {
-        clearInterval(countdownInterval);
-      };
-    }
-  }, [user?.kycStatus]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,12 +61,13 @@ export const KycRoute = () => {
     }));
   };
 
-  const handleAutoApproveKyc = async () => {
+
+  const approveKycDirectly = async () => {
     try {
       const jwt = await getJWT();
       if (!jwt) {
         setError("Failed to get authentication token");
-        return;
+        return false;
       }
 
       const decoded = jwtDecode(jwt) as any;
@@ -100,9 +75,12 @@ export const KycRoute = () => {
 
       if (!userId) {
         setError("User not properly authenticated");
-        return;
+        return false;
       }
 
+      console.log("Starting KYC approval for userId:", userId);
+
+      // Step 1: Set KYC status to approved on backend
       const response = await fetch(
         `${import.meta.env.VITE_GNOSIS_PAY_API_BASE_URL}dev/set-kyc-status`,
         {
@@ -112,51 +90,36 @@ export const KycRoute = () => {
         },
       );
 
+      console.log("KYC approval response:", response.status, response.statusText);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
         throw new Error("Failed to approve KYC");
       }
 
+      const approveData = await response.json();
+      console.log("Approval response data:", approveData);
+
+      // Step 2: Trigger refreshUser to update the frontend state
+      console.log("Triggering refreshUser to update frontend state");
       refreshUser();
-    } catch (err) {
-      setError(`Error auto-approving KYC: ${err instanceof Error ? err.message : "Unknown error"}`);
-      console.error(err);
-    }
-  };
 
-  const setKycToPending = async () => {
-    try {
-      const jwt = await getJWT();
-      if (!jwt) {
-        setError("Failed to get authentication token");
-        return false;
+      // Step 3: Wait a moment for data to be fetched and UI to update
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      console.log("KYC approval completed, current user status:", user?.kycStatus);
+
+      // Step 4: Navigate directly - the useEffect will handle navigation when user updates
+      // But to be safe, if user hasn't updated yet, navigate anyway
+      if (!user || user.kycStatus !== "approved") {
+        console.log("User status not yet updated to approved, forcing navigation");
+        navigate("/safe-deployment");
       }
 
-      const decoded = jwtDecode(jwt) as any;
-      const userId = decoded.userId;
-
-      if (!userId) {
-        setError("User not properly authenticated");
-        return false;
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_GNOSIS_PAY_API_BASE_URL}dev/set-kyc-status`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, status: "pending" }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to set KYC status");
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      refreshUser();
       return true;
     } catch (err) {
-      setError(`Error setting KYC to pending: ${err instanceof Error ? err.message : "Unknown error"}`);
+      setError(`Error approving KYC: ${err instanceof Error ? err.message : "Unknown error"}`);
       console.error(err);
       return false;
     }
@@ -175,9 +138,10 @@ export const KycRoute = () => {
     setError("");
 
     try {
-      const success = await setKycToPending();
+      // Submit form data - directly approve KYC
+      const success = await approveKycDirectly();
       if (success) {
-        toast.success("KYC information submitted! Processing...");
+        toast.success("KYC information submitted successfully!");
       }
     } finally {
       setIsLoading(false);
@@ -189,9 +153,9 @@ export const KycRoute = () => {
     setError("");
 
     try {
-      const success = await setKycToPending();
+      const success = await approveKycDirectly();
       if (success) {
-        toast.success("KYC submitted! Processing...");
+        toast.success("KYC approved! (dev mode)");
       }
     } finally {
       setIsLoading(false);
@@ -252,36 +216,6 @@ export const KycRoute = () => {
     { value: "rejected", label: "Rejected", description: "Final rejection (contact support)" },
     { value: "requiresAction", label: "Requires Action", description: "Manual check required" },
   ];
-
-  // Show waiting page when KYC is pending or processing
-  if (user?.kycStatus === "pending" || user?.kycStatus === "processing") {
-    return (
-      <div className="grid grid-cols-6 gap-4 h-full" data-testid="kyc-page">
-        <div className="col-span-6 lg:col-start-2 lg:col-span-4 mx-4 lg:mx-0 mt-8 flex items-center justify-center">
-          <div className="space-y-8 text-center">
-            <div>
-              <h1 className="text-3xl font-semibold mb-2">Your KYC is being processed</h1>
-              <p className="text-muted-foreground text-lg">Please wait while we verify your information</p>
-            </div>
-
-            <div className="flex justify-center">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full border-4 border-muted-foreground/20"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary animate-spin"></div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Auto-approving in...</p>
-              <p className="text-4xl font-bold text-primary">{secondsRemaining}s</p>
-            </div>
-
-            <p className="text-xs text-muted-foreground">This usually takes a few seconds</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="grid grid-cols-6 gap-4 h-full" data-testid="kyc-page">

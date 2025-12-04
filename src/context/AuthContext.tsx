@@ -67,7 +67,15 @@ const AuthContextProvider = ({ children }: AuthContextProps) => {
     const storedJwt = localStorage.getItem(jwtAddressKey);
 
     if (storedJwt) {
-      setJwt(storedJwt);
+      // Validate that the token is a proper JWT (has 3 parts separated by dots)
+      if (storedJwt.split('.').length === 3) {
+        setJwt(storedJwt);
+      } else {
+        // Invalid token format, clear it
+        console.warn("Invalid token format in localStorage, clearing it");
+        localStorage.removeItem(jwtAddressKey);
+        setJwt(null);
+      }
     } else {
       // Clear JWT if no stored token for this address
       setJwt(null);

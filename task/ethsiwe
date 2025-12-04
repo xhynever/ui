@@ -1,0 +1,59 @@
+# Sign-In with Ethereum
+
+![](https://4020722360-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2Fhsp8Jza9wShYT1iNJ5iM%2Fuploads%2F8LJJvRmWFRWr45qTGItA%2FGroup%20383%20\(3\).png?alt=media\&token=d7b05a01-00a6-4474-a26c-9b6815815a4e)
+
+Sign-In with Ethereum is a new form of authentication that enables users to control their digital identity with their [Ethereum](https://ethereum.org) account and [ENS](https://ens.domains) profile instead of relying on a traditional intermediary. Already used throughout Web3, this effort standardizes the method with best practices and makes it easy to adopt securely.
+
+To hop right in, check out our [Quickstart Guide](https://docs.login.xyz/sign-in-with-ethereum/quickstart-guide).
+
+{% content-ref url="sign-in-with-ethereum/quickstart-guide" %}
+[quickstart-guide](https://docs.login.xyz/sign-in-with-ethereum/quickstart-guide)
+{% endcontent-ref %}
+
+### Integrate Sign-In with Ethereum
+
+{% content-ref url="libraries/typescript" %}
+[typescript](https://docs.login.xyz/libraries/typescript)
+{% endcontent-ref %}
+
+{% content-ref url="libraries/rust" %}
+[rust](https://docs.login.xyz/libraries/rust)
+{% endcontent-ref %}
+
+{% content-ref url="libraries/python" %}
+[python](https://docs.login.xyz/libraries/python)
+{% endcontent-ref %}
+
+{% content-ref url="libraries/ruby" %}
+[ruby](https://docs.login.xyz/libraries/ruby)
+{% endcontent-ref %}
+
+### Additional Support
+
+{% content-ref url="additional-support/ens-profile-resolution" %}
+[ens-profile-resolution](https://docs.login.xyz/additional-support/ens-profile-resolution)
+{% endcontent-ref %}
+
+### Additional Resources
+
+* Sign-in With Ethereum was a standard built collaboratively with the greater Ethereum community. For more information on the EIP, check out the following page:
+
+{% content-ref url="general-information/siwe-overview/eip-4361" %}
+[eip-4361](https://docs.login.xyz/general-information/siwe-overview/eip-4361)
+{% endcontent-ref %}
+
+* For more information on Sign-In with Ethereum and its related benefits to both the Web3 ecosystem and Web2 services, check out the following page:
+
+{% content-ref url="general-information/siwe-overview" %}
+[siwe-overview](https://docs.login.xyz/general-information/siwe-overview)
+{% endcontent-ref %}
+
+### Community
+
+* :computer: [**Login.xyz**](https://login.xyz) - Check out the Sign-In with Ethereum home page for more information about supporters, and recent activity.
+* :space\_invader: [**Discord**](https://discord.com/invite/WjvuYqvm5Y) **-** Join the #sign-in-with-ethereum channel in the Spruce Discord Server for additional support.
+* :book: [**Blog**](https://blog.spruceid.com) **-** Check out the latest updates on Sign-In with Ethereum posted on the Spruce blog.
+
+{% hint style="info" %}
+We host a Sign-In with Ethereum community where we discuss relevant updates, new libraries, additional integrations, and more. If you're interested in contributing to Sign-In with Ethereum, we encourage that you join the calls by filling in [this form.](https://forms.gle/bJX99EJqExq66J2c7)
+{% endhint %}

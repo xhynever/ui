@@ -1,0 +1,182 @@
+# Create a new User
+
+> This endpoint creates a new `User` associating it with the provided email address.
+
+## OpenAPI
+
+````yaml https://api.gnosispay.com/api-docs/spec.json post /api/v1/auth/signup
+paths:
+  path: /api/v1/auth/signup
+  method: post
+  servers:
+    - url: https://api.gnosispay.com
+  request:
+    security:
+      - title: bearerAuth
+        parameters:
+          query: {}
+          header:
+            Authorization:
+              type: http
+              scheme: bearer
+          cookie: {}
+    parameters:
+      path: {}
+      query: {}
+      header: {}
+      cookie: {}
+    body:
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              authEmail:
+                allOf:
+                  - type: string
+                    format: email
+                    description: Email address for the new user
+              otp:
+                allOf:
+                  - type: string
+                    minLength: 6
+                    maxLength: 6
+                    description: >-
+                      One-time password for email verification (optional during
+                      transition period)
+              referralCouponCode:
+                allOf:
+                  - type: string
+                    description: Referral coupon code for the new user
+              marketingCampaign:
+                allOf:
+                  - type: string
+                    description: Marketing campaign identifier
+              partnerId:
+                allOf:
+                  - type: string
+                    description: Optional ID of the partner that referred the user
+            required: true
+            requiredProperties:
+              - authEmail
+        examples:
+          example:
+            value:
+              authEmail: jsmith@example.com
+              otp: <string>
+              referralCouponCode: <string>
+              marketingCampaign: <string>
+              partnerId: <string>
+  response:
+    '201':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              id:
+                allOf:
+                  - type: string
+                    description: Unique identifier of the created user
+              token:
+                allOf:
+                  - type: string
+                    description: JWT token for authentication
+              hasSignedUp:
+                allOf:
+                  - type: boolean
+                    description: Indicates if the user has completed signup
+            requiredProperties:
+              - id
+              - token
+              - hasSignedUp
+        examples:
+          example:
+            value:
+              id: <string>
+              token: <string>
+              hasSignedUp: true
+        description: User was created successfully
+    '400':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              error:
+                allOf:
+                  - type: string
+                    example: Invalid partner ID
+        examples:
+          example:
+            value:
+              error: Invalid partner ID
+        description: Invalid partner ID
+    '401':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              error:
+                allOf:
+                  - type: string
+                    example: Invalid or expired OTP
+        examples:
+          example:
+            value:
+              error: Invalid or expired OTP
+        description: Invalid or expired OTP
+    '409':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              error:
+                allOf:
+                  - type: string
+                    example: >-
+                      Email address already registered or Wallet address already
+                      associated with another account
+        examples:
+          example:
+            value:
+              error: >-
+                Email address already registered or Wallet address already
+                associated with another account
+        description: Email address or wallet address already registered
+    '422':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              error:
+                allOf:
+                  - type: string
+                    example: Invalid email format
+        examples:
+          example:
+            value:
+              error: Invalid email format
+        description: Invalid request body
+    '500':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              error:
+                allOf:
+                  - type: string
+                    description: Details about the server error
+                    example: An unexpected error occurred
+        examples:
+          example:
+            value:
+              error: An unexpected error occurred
+        description: Internal server error
+  deprecated: false
+  type: path
+components:
+  schemas: {}
+
+````
+
+---
+
+> To find navigation and other pages in this documentation, fetch the llms.txt file at: https://docs.gnosispay.com/llms.txt

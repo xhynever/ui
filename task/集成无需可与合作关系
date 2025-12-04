@@ -1,0 +1,100 @@
+# Integration models : Permissionless vs Partnerships
+
+> Gnosis Pay offers two ways of integrating Gnosis Pay APIs. Whether you’re building as a developer or looking to launch a whitelisted branded solution, Gnosis Pay is designed to be flexible and accessible for all developers and businesses.
+
+## Integration Models: Permissionless vs Partnerships
+
+Gnosis Pay offers two ways to get started:
+
+1. Permissionless Integration
+2. Partnership Integration
+
+***
+
+## 1. Permissionless Integration (Free Plan Only)
+
+Developers can start building with our APIs right away—no need to contact us or go through an approval process. This lets you quickly enable crypto payments, card issuance, and account features for your users.
+
+<img src="https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_permissionless.png?fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=876895c601d3df19fa556163a3cba90e" alt="Permissionless API Flow - Start building and testing with Gnosis Pay APIs" className="rounded-lg shadow-lg" data-og-width="2892" width="2892" data-og-height="1323" height="1323" data-path="static/img/API Flows_permissionless.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_permissionless.png?w=280&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=0fab78ec2bce6930e225114152f5fedb 280w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_permissionless.png?w=560&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=08933b0da3b6bf2580f3234c2e09589f 560w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_permissionless.png?w=840&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=cc89166d88bf7f2683a2bc53c0dd4986 840w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_permissionless.png?w=1100&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=689354ef36f88a683bd6c5f5551e96a7 1100w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_permissionless.png?w=1650&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=364c7cce3ba96707d68a066ebb588915 1650w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_permissionless.png?w=2500&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=39622d102eee6dfa4a343f550da6ea8b 2500w" />
+
+<Info>
+  This integration requires no special credentials. Simply authenticate with our APIs using SIWE (Sign-In with Ethereum) to receive a JWT token and start building.
+</Info>
+
+**Who it's for:** Developers or small teams who want to explore the APIs, prototype, or run very lightweight programs.
+
+<CardGroup cols={2}>
+  <Card title="What You Can Do" icon="check" color="#16a34a">
+    * ✅ Make API calls immediately — no API keys, approvals, or contracts
+    * ✅ Issue and manage Gnosis-branded cards for testing and early users
+    * ✅ Experiment with basic functionality (card issuance, transactions, balance queries)
+  </Card>
+
+  <Card title="What You Can't Do" icon="x" color="#dc2626">
+    * ❌ Attribute card activity back to your business (no webhooks, no tracking)
+    * ❌ Display sensitive card details (requires Partner Secure Element)
+    * ❌ Launch a branded card program at scale
+  </Card>
+</CardGroup>
+
+<Card title="🚀 When to Move On" icon="arrow-right" color="#2563eb">
+  Once you want to connect card activity to your app/business or expose sensitive card details, you'll need to switch into Partnership mode.
+</Card>
+
+***
+
+## 2. Partnership Integration (Free, Startup, and Enterprise)
+
+If your company is interested in deeper collaboration—such as branded cards, custom user experiences, fee rebates, or co-marketing opportunities — [you can apply to become a Gnosis Pay partner](https://form.typeform.com/to/naN3irHW?typeform-source=gnosispay.com).
+
+<img src="https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_partnership.png?fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=0d05e37a2ef85f50f5483d07311bb48a" alt="Partnership API Flow - Start building and testing with Gnosis Pay APIs" className="rounded-lg shadow-lg" data-og-width="4631" width="4631" data-og-height="1644" height="1644" data-path="static/img/API Flows_partnership.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_partnership.png?w=280&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=f717edbf4900a0e1c13a71d2f7caf9dc 280w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_partnership.png?w=560&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=5bfd3af41043804749a0969a18583964 560w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_partnership.png?w=840&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=d7ad0925696a2579357f8aac9e425c39 840w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_partnership.png?w=1100&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=51e734f2a75d8e030ecadbd98dade9a0 1100w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_partnership.png?w=1650&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=b3fea65cf0bed74f4593d45ede9df881 1650w, https://mintcdn.com/gnosispay/k3hrGlhZGi4lgCAa/static/img/API%20Flows_partnership.png?w=2500&fit=max&auto=format&n=k3hrGlhZGi4lgCAa&q=85&s=409a9b8efff1fe220a532ac2e592cdc1 2500w" />
+
+**Who it's for:** Any partner ready to move beyond experimentation and operate a live program.
+
+<CardGroup cols={2}>
+  <Card title="Key Credentials" icon="key" color="#7c3aed" href="/integration-model#getting-your-partnerid-and-app-id">
+    * **Partner ID** → Required for webhooks, attribution, and tracking
+
+    * **App ID** → Required for Partner Secure Element (PSE) access
+  </Card>
+
+  <Card title="Advanced Features" icon="star" color="#ea580c">
+    * Branded cards and custom experiences
+    * Multi-market support
+    * BIN sponsorship
+    * Compliance oversight
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Dedicated Support" icon="headset" color="#059669">
+    Direct access to Gnosis Pay team for technical guidance and business support.
+  </Card>
+
+  <Card title="Full Observability" icon="chart-bar" color="#2563eb">
+    Complete integration into your systems with webhooks and analytics.
+  </Card>
+</CardGroup>
+
+**Mandatory for:** Startup and Enterprise plans, but also available to Free Plan partners who want to extend beyond pure experimentation.
+
+## **Getting Your PartnerID and APP\_ID**
+
+Once your partnership application is approved, our team will provide you with:
+
+* **PartnerID**: A unique identifier for your partner organization within the Gnosis Pay ecosystem, enabling us to track user acquisition and attribute activity to your integration.
+
+* **APP\_ID**: An application-specific identifier that allows partners to authenticate with the PSE (Partner Secure Elements) and establish secure mTLS connection authentication between partner and Gnosis Pay.
+
+<Info>
+  To get your PartnerID and APP\_ID, please follow these steps:
+
+  1. Submit your partnership application through the [provided link](https://form.typeform.com/to/naN3irHW?typeform-source=gnosispay.com).
+  2. Wait for approval from Gnosis Pay team.
+  3. Once approved, you will receive an invite to join slack where we will communicate your PartnerID and APP\_ID and provide technical support.
+</Info>
+
+
+---
+
+> To find navigation and other pages in this documentation, fetch the llms.txt file at: https://docs.gnosispay.com/llms.txt

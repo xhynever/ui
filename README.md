@@ -16,3 +16,13 @@ Set this variables in a `.env` file
 - `pnpm lint --fix` to lint and fix any error that can be fixed for you
 - `pnpm build` to build
 - `pnpm generate-api-types` to generate a client and types to interract with the gnosispay api
+
+
+
+
+  两个分支同时运行时，访问:
+
+  | 分支   | 前端                    | 后端                    |
+  |------|-----------------------|-----------------------|
+  | 主分支  | http://localhost:5173 | http://localhost:8080 |
+  | 错误分支 | http://localhost:5174 | http://localhost:8081 |

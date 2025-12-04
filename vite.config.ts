@@ -26,6 +26,7 @@ export default defineConfig({
     },
   },
   server: {
+    port: 5174, // 错误分支 +1
     allowedHosts: ["verified-pug-renewing.ngrok-free.app"],
     cors: {
       origin: "https://app.safe.global",

@@ -10,6 +10,7 @@ import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
 import errorHandler from "@/common/middleware/errorHandler";
 import requestLogger from "@/common/middleware/requestLogger";
 import { tokenRouter } from "./api/token/tokenRouter";
+import { mockApiRouter } from "./api/mock/mockApiRouter";
 
 const CORS_CONFIG = {
   // Static origins that are always allowed
@@ -72,6 +73,11 @@ app.use(requestLogger);
 // Routes
 app.use("/health-check", healthCheckRouter);
 app.use("/token", tokenRouter);
+
+// Mock Gnosis Pay API for development
+if (process.env.NODE_ENV === "development") {
+  app.use("/", mockApiRouter);
+}
 
 app.get("/native-webview", (_req, res) => {
   const isDevelopment = __dirname.includes("/src");

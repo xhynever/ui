@@ -12,12 +12,7 @@ enum ScreenStep {
   DeploySafe = "deploy-safe",
 }
 export const SafeDeploymentRoute = () => {
-  // In dev mode with mock KYC, start directly at Safe deployment
-  const isDev = import.meta.env.DEV;
-  const mockKycApproved = isDev && localStorage.getItem("gp-ui.mock-kyc-approved") === "true";
-  const initialStep = mockKycApproved ? ScreenStep.DeploySafe : ScreenStep.AnswerSourceOfFunds;
-
-  const [step, setStep] = useState<ScreenStep>(initialStep);
+  const [step, setStep] = useState<ScreenStep>(ScreenStep.AnswerSourceOfFunds);
   const { user, safeConfig, refreshUser: refetchUser, isUserSignedUp } = useUser();
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -31,9 +26,8 @@ export const SafeDeploymentRoute = () => {
 
     if (!user) return;
 
-    // In dev mode, check both backend KYC status and local mock flag
-    const mockKycApproved = import.meta.env.DEV && localStorage.getItem("gp-ui.mock-kyc-approved") === "true";
-    if (user.kycStatus !== "approved" && !mockKycApproved) {
+    // Check if user is KYC approved
+    if (user.kycStatus !== "approved") {
       navigate("/kyc");
     }
   }, [user, navigate, isUserSignedUp]);

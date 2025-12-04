@@ -42,17 +42,7 @@ const UserContextProvider = ({ children }: UserContextProps) => {
       return undefined;
     }
 
-    // Check if KYC is approved in backend
-    const backendKycApproved = user.kycStatus === "approved";
-
-    // In development mode, also check localStorage for manual KYC approval override
-    const isDev = import.meta.env.DEV;
-    if (isDev) {
-      const mockKycApproved = localStorage.getItem("gp-ui.mock-kyc-approved");
-      return mockKycApproved === "true" || backendKycApproved;
-    }
-
-    return backendKycApproved;
+    return user.kycStatus === "approved";
   }, [isAuthenticated, isUserSignedUp, user]);
 
   const isSafeConfigured = useMemo(() => {

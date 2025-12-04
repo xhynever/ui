@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"D:\\dev\\ui-origin\\ui\\src\\components\\dev\"\" 2>/dev/null || echo \"dev folder does not exist \")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

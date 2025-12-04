@@ -134,15 +134,17 @@ const DeploySafeStep = ({ setError }: DeploySafeStepProps) => {
       refreshUserFn();
       refreshSafeConfigFn();
 
+      // Wait longer to ensure data is refreshed
       const timer = setTimeout(() => {
         console.log("Auto-navigating to home...");
         navigate("/");
-        // Reset bypass navigation after navigation completes
+        // Keep bypass navigation enabled for longer to ensure page renders
         const resetTimer = setTimeout(() => {
+          console.log("Resetting bypass navigation...");
           setBypassNavigation(false);
-        }, 500);
+        }, 2000);
         return () => clearTimeout(resetTimer);
-      }, 1000);
+      }, 2000);
 
       return () => clearTimeout(timer);
     }

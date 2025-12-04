@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAppKit } from "@reown/appkit/react";
 import { useTheme } from "@/context/ThemeContext";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import darkOwl from "@/assets/Gnosis-owl-white.svg";
 import lightOwl from "@/assets/Gnosis-owl-black.svg";
@@ -12,6 +12,7 @@ import { TROUBLE_LOGGING_IN_URL } from "@/constants";
 import { DebugButton } from "./DebugButton";
 import { useAccount } from "wagmi";
 import { useGnosisChainEnforcer } from "@/hooks/useGnosisChainEnforcer";
+import { useDevMode } from "@/context/DevModeContext";
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -28,6 +29,12 @@ interface AuthScreenProps {
     loading?: boolean;
   };
   showHelpLinkDebugButton?: boolean;
+  devButtonText?: string;
+  devButtonProps?: {
+    onClick: () => void;
+    disabled?: boolean;
+    loading?: boolean;
+  };
 }
 
 const AuthScreen = ({
@@ -36,6 +43,8 @@ const AuthScreen = ({
   buttonText,
   buttonProps,
   showHelpLinkDebugButton = false,
+  devButtonText,
+  devButtonProps,
 }: AuthScreenProps) => {
   const { effectiveTheme } = useTheme();
   const logoSrc = useMemo(() => (effectiveTheme === "dark" ? darkOwl : lightOwl), [effectiveTheme]);
@@ -52,6 +61,20 @@ const AuthScreen = ({
         >
           {buttonText}
         </Button>
+        {devButtonText && devButtonProps && (
+          <div className="w-full p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <p className="text-xs text-yellow-800 dark:text-yellow-200 mb-2 font-semibold text-center">
+              🧪 Development Mode
+            </p>
+            <Button
+              {...devButtonProps}
+              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-sm"
+              size="sm"
+            >
+              {devButtonText}
+            </Button>
+          </div>
+        )}
         {showHelpLinkDebugButton && (
           <>
             <a
@@ -76,6 +99,8 @@ export const AuthGuard = ({ children, isOnboardingRoute = false }: AuthGuardProp
   const { open } = useAppKit();
   const navigate = useNavigate();
   const { isConnected, isConnecting } = useAccount();
+  const { bypassNavigation } = useDevMode();
+  const [skipSafeSetupDev, setSkipSafeSetupDev] = useState(false);
 
   useGnosisChainEnforcer();
 
@@ -145,6 +170,13 @@ export const AuthGuard = ({ children, isOnboardingRoute = false }: AuthGuardProp
     };
   }, [navigate]);
 
+  const handleDevSkipSafeSetup = useCallback(() => {
+    if (!import.meta.env.DEV) return;
+    // Skip the safe setup check and navigate directly to home
+    setSkipSafeSetupDev(true);
+    navigate("/");
+  }, [navigate]);
+
   const safeDeploymentScreenConfig = useMemo((): AuthScreenProps => {
     return {
       title: "Safe Setup",
@@ -153,8 +185,14 @@ export const AuthGuard = ({ children, isOnboardingRoute = false }: AuthGuardProp
       buttonProps: {
         onClick: () => navigate("/safe-deployment"),
       },
+      ...(import.meta.env.DEV && {
+        devButtonText: "Skip Safe Setup (Dev)",
+        devButtonProps: {
+          onClick: handleDevSkipSafeSetup,
+        },
+      }),
     };
-  }, [navigate]);
+  }, [navigate, handleDevSkipSafeSetup]);
 
   // this is purely related to the wallet
   if (!isConnected) {
@@ -178,12 +216,12 @@ export const AuthGuard = ({ children, isOnboardingRoute = false }: AuthGuardProp
     return <AuthScreen {...kycScreenConfig} />;
   }
 
-  if (isSafeConfigured === false && !isOnboardingRoute) {
+  if (isSafeConfigured === false && !isOnboardingRoute && !bypassNavigation && !skipSafeSetupDev) {
     return <AuthScreen {...safeDeploymentScreenConfig} />;
   }
 
   // the wallet is connected and the JWT is set but the user needs to sign up
-  if (isOnboarded === false && !isOnboardingRoute) {
+  if (isOnboarded === false && !isOnboardingRoute && !skipSafeSetupDev) {
     return <AuthScreen {...signupScreenConfig} />;
   }
 

@@ -318,11 +318,16 @@ mockApiRouter.get("/api/v1/safe-config", (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
+  // Check if user has deployed Safe wallet
+  const user = users[decoded.userId];
+  const hasSafeWallet = user && user.safeWallet && user.safeWallet.length > 0;
+  const safeAddress = hasSafeWallet ? user.safeWallet[0].address : "0x1234567890123456789012345678901234567890";
+
   // Return a complete safe config object
   const mockSafeConfig = {
-    address: "0x1234567890123456789012345678901234567890",
+    address: safeAddress,
     chainId: 100,
-    accountStatus: 0, // AccountIntegrityStatus.Ok
+    accountStatus: hasSafeWallet ? 0 : 2, // 0 = AccountIntegrityStatus.Ok, 2 = NotDeployed
     fiatSymbol: "EUR",
     accountNonce: 0,
     delayModuleAddress: "0x0987654321098765432109876543210987654321",
@@ -345,7 +350,12 @@ mockApiRouter.post("/api/v1/safe/deploy", (req, res) => {
     return res.status(403).json({ error: "User is not KYC approved" });
   }
 
-  res.json({ status: "accepted" });
+  // Create Safe wallet for the user
+  if (user) {
+    user.safeWallet = [{ address: "0x" + Math.random().toString(16).slice(2, 42) }];
+  }
+
+  res.json({ status: "ok" });
 });
 
 // Mock GET /api/v1/safe/deploy

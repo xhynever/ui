@@ -32,7 +32,7 @@ cd pse-backend-demo && npm run dev
 ```
 
 **重要配置**：
-- 前端环境变量中已配置后端 IP：`.env` 文件中 `VITE_GNOSIS_PAY_API_BASE_URL=http://192.168.2.208:8081/`
+- 前端环境变量中已配置后端 IP：`.env` 文件中 `VITE_GNOSIS_PAY_API_BASE_URL=http://192.168.2.208:8082/`
 - 后端 CORS 已配置允许 `192.168.2.208` 的请求
 
 访问: `http://192.168.2.208:5174`
@@ -122,7 +122,7 @@ cd pse-backend-demo && npm run dev
 在 `.env` 文件中设置：
 
 - `VITE_PSE_RELAY_SERVER_URL` - PSE 中继服务器 URL，用于请求临时令牌
-- `VITE_GNOSIS_PAY_API_BASE_URL` - Gnosis Pay API 基础 URL（本地开发设为 `http://192.168.2.208:8081/`）
+- `VITE_GNOSIS_PAY_API_BASE_URL` - Gnosis Pay API 基础 URL（本地开发设为 `http://192.168.2.208:8082/`）
 - `VITE_PSE_APP_ID` - 注册为 Gnosis Pay 合作伙伴后获得的应用 ID
 - `VITE_IFRAME_HOST` - (可选) Gnosis Pay 公开 PSE 端点
 - `VITE_ZENDESK_KEY` - (可选) Zendesk 聊天密钥
@@ -156,14 +156,14 @@ pnpm generate-api-types
 | 分支 | 前端 | 后端 |
 |------|------|------|
 | main | http://localhost:5173 | http://localhost:8080 |
-| 错误 | http://localhost:5174 | http://localhost:8081 |
+| 错误 | http://localhost:5174 | http://localhost:8082 |
 
 通过 IP 访问：
 
 | 分支 | 前端 | 后端 |
 |------|------|------|
 | main | http://192.168.2.208:5173 | http://192.168.2.208:8080 |
-| 错误 | http://192.168.2.208:5174 | http://192.168.2.208:8081 |
+| 错误 | http://192.168.2.208:5174 | http://192.168.2.208:8082 |
 
 ## 关键修复说明
 
@@ -171,7 +171,7 @@ pnpm generate-api-types
 
 1. **前端配置**：`.env` 文件中配置后端 IP
    ```
-   VITE_GNOSIS_PAY_API_BASE_URL="http://192.168.2.208:8081/"
+   VITE_GNOSIS_PAY_API_BASE_URL="http://192.168.2.208:8082/"
    ```
 
 2. **后端 CORS 配置**：`pse-backend-demo/src/server.ts`
